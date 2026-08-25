@@ -198,6 +198,9 @@ func (h *Handler) UpdateCron(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusConflict, err)
 		return
 	}
+	// Refresh the in-memory fire index so the scheduler triggers only by the
+	// new expression; otherwise Tick keeps firing at the stale cached time.
+	h.sched.SetNextFire(t.ID, t.NextRunAt)
 	h.audit.Record(audit.Entry{At: now, Operator: h.operator, Action: "update-cron", TargetID: t.ID})
 	writeJSON(w, http.StatusOK, t)
 }
