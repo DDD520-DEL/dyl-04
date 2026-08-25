@@ -1,0 +1,8 @@
+.verification-cache/
+evidence/
+trajectories/
+runner/
+verify-workspaces/
+staging/
+*.log
+*.tmp
