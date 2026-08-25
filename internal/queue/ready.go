@@ -27,10 +27,17 @@ func NewReadyQueue() *ReadyQueue {
 	return &ReadyQueue{present: make(map[string]struct{})}
 }
 
-// Push enqueues a task unless it is already present.
+// Push enqueues a task unless it is already present. It returns true when a new
+// entry was added and false when the task was already queued and therefore
+// skipped. Keeping exactly one entry per task prevents duplicate triggers (for
+// example a scheduled Tick followed by an immediate TriggerNow) from stacking
+// up, which would otherwise make workers spin on a stale, un-leaseable entry.
 func (q *ReadyQueue) Push(taskID string, priority int, at time.Time) bool {
 	q.mu.Lock()
 	defer q.mu.Unlock()
+	if _, ok := q.present[taskID]; ok {
+		return false
+	}
 	q.present[taskID] = struct{}{}
 	entry := &ReadyEntry{TaskID: taskID, Priority: priority, EnqueuedAt: at}
 	heap.Push(&q.entries, entry)
