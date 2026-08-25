@@ -115,6 +115,11 @@ func (h *Handler) RegisterBatch(w http.ResponseWriter, r *http.Request) {
 	saved := make([]string, 0, len(built))
 	for _, task := range built {
 		if err := h.store.Save(task); err != nil {
+			// Roll back every task already written so the batch is all-or-nothing.
+			for _, id := range saved {
+				_ = h.store.Delete(id)
+				h.sched.Untrack(id)
+			}
 			writeError(w, http.StatusConflict, err)
 			return
 		}

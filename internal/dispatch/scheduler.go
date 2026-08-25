@@ -44,6 +44,15 @@ func (s *Scheduler) Track(task *model.Task) {
 	s.nextFire[task.ID] = task.NextRunAt
 }
 
+// Untrack removes a task from the dispatch index, reversing Track.
+// It is used to roll back dispatch state when a batch registration fails
+// partway through.
+func (s *Scheduler) Untrack(taskID string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.nextFire, taskID)
+}
+
 // RefreshCron updates the dispatch index after a cron change.
 func (s *Scheduler) RefreshCron(task *model.Task) {
 	s.mu.Lock()
