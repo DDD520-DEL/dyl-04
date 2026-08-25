@@ -81,7 +81,7 @@ func (m *Manager) RecordResult(lease *model.Lease, status, message string, start
 	}
 	m.metrics.TasksFailed.Add(1)
 	if task.RetriesLeft > 0 {
-		next := task.CreatedAt.Add(m.retryDelay)
+		next := finishedAt.Add(m.retryDelay)
 		updated, err := m.store.Retry(task.ID, next, task.Version)
 		if err != nil {
 			return nil, err
