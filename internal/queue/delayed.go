@@ -94,6 +94,12 @@ type delayedHeap []*DelayedEntry
 func (h delayedHeap) Len() int { return len(h) }
 
 func (h delayedHeap) Less(i, j int) bool {
+	// Order by next run time so the earliest-due task is at the heap root;
+	// PopDue then drains due tasks earliest-first regardless of enqueue order.
+	// Ties fall back to enqueue order for stable, FIFO-like behavior.
+	if !h[i].NextRunAt.Equal(h[j].NextRunAt) {
+		return h[i].NextRunAt.Before(h[j].NextRunAt)
+	}
 	return h[i].EnqueuedAt.Before(h[j].EnqueuedAt)
 }
 
