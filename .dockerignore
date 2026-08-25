@@ -1,0 +1,12 @@
+.git
+evidence
+private_oracles
+cases
+workspaces
+verify-workspaces
+runner
+trajectories
+archive
+staging
+*.jsonl
+*.zip
