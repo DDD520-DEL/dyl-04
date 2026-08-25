@@ -49,6 +49,15 @@ func (m *Manager) RecordResult(lease *model.Lease, status, message string, start
 	if err != nil {
 		return nil, err
 	}
+	// Discard results whose lease no longer matches the current task version.
+	// TaskVersion is the version bound to the lease at issue time; if it no
+	// longer matches the task, the lease expired and the task was re-leased to
+	// another worker. Applying such a stale result (e.g. a late failure report
+	// from a worker that lost connectivity) would clobber the new execution
+	// that is still in flight. Mirrors the staleness check in lease.Renew.
+	if lease.TaskVersion != task.Version {
+		return nil, ErrStaleResult
+	}
 	rec := &model.ExecutionRecord{
 		ID:         m.idgen.Next("exec"),
 		TaskID:     task.ID,
